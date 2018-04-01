@@ -12,6 +12,7 @@ import mongoose from "mongoose";
 import passport from "passport";
 import expressValidator from "express-validator";
 import bluebird from "bluebird";
+import { Request, Response } from "express";
 
 const MongoStore = mongo(session);
 
@@ -23,6 +24,7 @@ import * as homeController from "./controllers/home";
 import * as userController from "./controllers/user";
 import * as apiController from "./controllers/api";
 import * as contactController from "./controllers/contact";
+import * as gdaxController from "./controllers/gdax";
 
 
 // API keys and Passport configuration
@@ -34,7 +36,7 @@ const app = express();
 // Connect to MongoDB
 const mongoUrl = process.env.MONGOLAB_URI;
 (<any>mongoose).Promise = bluebird;
-mongoose.connect(mongoUrl, {useMongoClient: true}).then(
+mongoose.connect(mongoUrl, { useMongoClient: true }).then(
   () => { /** ready to use. The `mongoose.connect()` promise resolves to undefined. */ },
 ).catch(err => {
   console.log("MongoDB connection error. Please make sure MongoDB is running. " + err);
@@ -42,7 +44,7 @@ mongoose.connect(mongoUrl, {useMongoClient: true}).then(
 });
 
 // Express configuration
-app.set("port", process.env.PORT || 3000);
+app.set("port", process.env.PORT || 3200);
 app.set("views", path.join(__dirname, "../views"));
 app.set("view engine", "pug");
 app.use(compression());
@@ -121,5 +123,25 @@ app.get("/auth/facebook", passport.authenticate("facebook", { scope: ["email", "
 app.get("/auth/facebook/callback", passport.authenticate("facebook", { failureRedirect: "/login" }), (req, res) => {
   res.redirect(req.session.returnTo || "/");
 });
+
+/**
+ * GDAX APIs
+ */
+app.get("/gdax", gdaxController.index);
+app.get("/gdax/24hrstats/:fsym/:tsym", gdaxController.get24hrStats);
+app.get("/gdax/24hrstats/multi", gdaxController.get24hrStatsMulti);
+app.get("/gdax/getcurrencies", gdaxController.getCurrencies);
+app.get("/gdax/historicrates/:fsym/:tsym", gdaxController.getHistoricRates);
+app.get("/gdax/historicrates/multi", gdaxController.getHistoricRatesMulti);
+app.get("/gdax/productorderbook/:fsym/:tsym", gdaxController.getProductOrderBook);
+app.get("/gdax/productorderbook/multi", gdaxController.getProductOrderBookMulti);
+app.get("/gdax/products/:fsym/:tsym", gdaxController.getProducts);
+app.get("/gdax/products/multi", gdaxController.getProductTicker);
+app.get("/gdax/productticker/:fsym/:tsym", gdaxController.getProductTickerMulti);
+app.get("/gdax/productticker/multi", gdaxController.getTime);
+app.get("/gdax/trades/:fsym/:tsym", gdaxController.getTrades);
+app.get("/gdax/trades/multi", gdaxController.getTradesMulti);
+
+
 
 export default app;
